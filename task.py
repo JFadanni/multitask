@@ -14,6 +14,28 @@ rules_dict = \
 
     'mante' : ['contextdm1', 'contextdm2'],
 
+    'fdgo' : ['fdgo'],
+    'reactgo' : ['reactgo'],
+    'delaygo' : ['delaygo'],
+    'fdanti' : ['fdanti'],
+    'reactanti' : ['reactanti'],
+    'delayanti' : ['delayanti'],
+    'dm1' : ['dm1'],
+    'dm2' : ['dm2'],
+    'contextdm1' : ['contextdm1'],
+    'contextdm2' : ['contextdm2'],
+    'multidm' : ['multidm'],
+    'delaydm1' : ['delaydm1'],
+    'delaydm2' : ['delaydm2'],
+    'contextdelaydm1' : ['contextdelaydm1'],
+    'contextdelaydm2' : ['contextdelaydm2'],
+    'multidelaydm' : ['multidelaydm'],
+    'dmsgo' : ['dmsgo'],
+    'dmsnogo' : ['dmsnogo'],
+    'dmcgo' : ['dmcgo'],
+    'dmcnogo' : ['dmcnogo'],
+
+
     'oicdmc' : ['oic', 'dmc']}
 
 # Store indices of rules

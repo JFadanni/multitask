@@ -20,6 +20,8 @@ from tensorflow.python.ops.rnn_cell_impl import RNNCell
 import tools
 
 
+tf.compat.v1.disable_eager_execution()
+
 def is_weight(v):
     """Check if Tensorflow variable v is a connection weight."""
     return ('kernel' in v.name or 'weight' in v.name)
@@ -50,11 +52,11 @@ def tf_popvec(y):
     pref = np.arange(0, 2 * np.pi, 2 * np.pi / num_units)  # preferences
     cos_pref = np.cos(pref)
     sin_pref = np.sin(pref)
-    temp_sum = tf.reduce_sum(y, axis=-1)
-    temp_cos = tf.reduce_sum(y * cos_pref, axis=-1) / temp_sum
-    temp_sin = tf.reduce_sum(y * sin_pref, axis=-1) / temp_sum
+    temp_sum = tf.reduce_sum(input_tensor=y, axis=-1)
+    temp_cos = tf.reduce_sum(input_tensor=y * cos_pref, axis=-1) / temp_sum
+    temp_sin = tf.reduce_sum(input_tensor=y * sin_pref, axis=-1) / temp_sum
     loc = tf.atan2(temp_sin, temp_cos)
-    return tf.mod(loc, 2*np.pi)
+    return tf.math.floormod(loc, 2*np.pi)
 
 
 def get_perf(y_hat, y_loc):
@@ -172,7 +174,7 @@ class LeakyRNNCell(RNNCell):
         matrix0 = np.concatenate((w_in0, w_rec0), axis=0)
 
         self.w_rnn0 = matrix0
-        self._initializer = tf.constant_initializer(matrix0, dtype=tf.float32)
+        self._initializer = tf.compat.v1.constant_initializer(matrix0, dtype=tf.float32)
 
     @property
     def state_size(self):
@@ -183,12 +185,13 @@ class LeakyRNNCell(RNNCell):
         return self._num_units
 
     def build(self, inputs_shape):
-        if inputs_shape[1].value is None:
+        #if inputs_shape[1].value is None:
+        if inputs_shape[1] is None:
             raise ValueError(
                 "Expected inputs.shape[-1] to be known, saw shape: %s"
                                              % inputs_shape)
 
-        input_depth = inputs_shape[1].value
+        input_depth = inputs_shape[1]#.value
         self._kernel = self.add_variable(
                 'kernel',
                 shape=[input_depth + self._num_units, self._num_units],
@@ -207,7 +210,7 @@ class LeakyRNNCell(RNNCell):
             array_ops.concat([inputs, state], 1), self._kernel)
         gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
-        noise = tf.random_normal(tf.shape(state), mean=0, stddev=self._sigma)
+        noise = tf.random.normal(tf.shape(input=state), mean=0, stddev=self._sigma)
         gate_inputs = gate_inputs + noise
 
         output = self._activation(gate_inputs)
@@ -314,7 +317,7 @@ class LeakyGRUCell(RNNCell):
       candidate = math_ops.matmul(
           array_ops.concat([inputs, r_state], 1), self._candidate_kernel)
       candidate = nn_ops.bias_add(candidate, self._candidate_bias)
-      candidate += tf.random_normal(tf.shape(state), mean=0, stddev=self._sigma)
+      candidate += tf.random.normal(tf.shape(input=state), mean=0, stddev=self._sigma)
 
       c = self._activation(candidate)
       # new_h = u * state + (1 - u) * c  # original GRU
@@ -387,7 +390,7 @@ class LeakyRNNCellSeparateInput(RNNCell):
             raise ValueError
 
         self.w_rnn0 = w_rec0
-        self._initializer = tf.constant_initializer(w_rec0, dtype=tf.float32)
+        self._initializer = tf.compat.v1.constant_initializer(w_rec0, dtype=tf.float32)
 
     @property
     def state_size(self):
@@ -416,7 +419,7 @@ class LeakyRNNCellSeparateInput(RNNCell):
         gate_inputs = gate_inputs + inputs  # directly add inputs
         gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
-        noise = tf.random_normal(tf.shape(state), mean=0, stddev=self._sigma)
+        noise = tf.random.normal(tf.shape(input=state), mean=0, stddev=self._sigma)
         gate_inputs = gate_inputs + noise
 
         output = self._activation(gate_inputs)
@@ -445,7 +448,7 @@ class Model(object):
         """
 
         # Reset tensorflow graphs
-        tf.reset_default_graph()  # must be in the beginning
+        tf.compat.v1.reset_default_graph()  # must be in the beginning
 
         if hp is None:
             hp = tools.load_hp(model_dir)
@@ -453,7 +456,7 @@ class Model(object):
                 raise ValueError(
                     'No hp found for model_dir {:s}'.format(model_dir))
 
-        tf.set_random_seed(hp['seed'])
+        tf.compat.v1.set_random_seed(hp['seed'])
         self.rng = np.random.RandomState(hp['seed'])
 
         if sigma_rec is not None:
@@ -482,7 +485,7 @@ class Model(object):
         else:
             self._build_fused(hp)
 
-        self.var_list = tf.trainable_variables()
+        self.var_list = tf.compat.v1.trainable_variables()
         self.weight_list = [v for v in self.var_list if is_weight(v)]
 
         if 'use_separate_input' in hp and hp['use_separate_input']:
@@ -493,43 +496,43 @@ class Model(object):
         # Regularization terms
         self.cost_reg = tf.constant(0.)
         if hp['l1_h'] > 0:
-            self.cost_reg += tf.reduce_mean(tf.abs(self.h)) * hp['l1_h']
+            self.cost_reg += tf.reduce_mean(input_tensor=tf.abs(self.h)) * hp['l1_h']
         if hp['l2_h'] > 0:
             self.cost_reg += tf.nn.l2_loss(self.h) * hp['l2_h']
 
         if hp['l1_weight'] > 0:
             self.cost_reg += hp['l1_weight'] * tf.add_n(
-                [tf.reduce_mean(tf.abs(v)) for v in self.weight_list])
+                [tf.reduce_mean(input_tensor=tf.abs(v)) for v in self.weight_list])
         if hp['l2_weight'] > 0:
             self.cost_reg += hp['l2_weight'] * tf.add_n(
                 [tf.nn.l2_loss(v) for v in self.weight_list])
 
         # Create an optimizer.
         if 'optimizer' not in hp or hp['optimizer'] == 'adam':
-            self.opt = tf.train.AdamOptimizer(
+            self.opt = tf.compat.v1.train.AdamOptimizer(
                 learning_rate=hp['learning_rate'])
         elif hp['optimizer'] == 'sgd':
-            self.opt = tf.train.GradientDescentOptimizer(
+            self.opt = tf.compat.v1.train.GradientDescentOptimizer(
                 learning_rate=hp['learning_rate'])
         # Set cost
         self.set_optimizer()
 
         # Variable saver
         # self.saver = tf.train.Saver(self.var_list)
-        self.saver = tf.train.Saver()
+        self.saver = tf.compat.v1.train.Saver()
 
     def _build_fused(self, hp):
         n_input = hp['n_input']
         n_rnn = hp['n_rnn']
         n_output = hp['n_output']
 
-        self.x = tf.placeholder("float", [None, None, n_input])
-        self.y = tf.placeholder("float", [None, None, n_output])
+        self.x = tf.compat.v1.placeholder("float", [None, None, n_input])
+        self.y = tf.compat.v1.placeholder("float", [None, None, n_output])
         if hp['loss_type'] == 'lsq':
-            self.c_mask = tf.placeholder("float", [None, n_output])
+            self.c_mask = tf.compat.v1.placeholder("float", [None, n_output])
         else:
             # Mask on time
-            self.c_mask = tf.placeholder("float", [None])
+            self.c_mask = tf.compat.v1.placeholder("float", [None])
 
         # Activation functions
         if hp['activation'] == 'power':
@@ -555,10 +558,10 @@ class Model(object):
                 n_rnn, hp['alpha'],
                 sigma_rec=hp['sigma_rec'], activation=f_act)
         elif hp['rnn_type'] == 'LSTM':
-            cell = tf.contrib.rnn.LSTMCell(n_rnn, activation=f_act)
+            cell = tf.compat.v1.nn.rnn_cell.LSTMCell(n_rnn, activation=f_act)
 
         elif hp['rnn_type'] == 'GRU':
-            cell = tf.contrib.rnn.GRUCell(n_rnn, activation=f_act)
+            cell = tf.compat.v1.nn.rnn_cell.GRUCell(n_rnn, activation=f_act)
         else:
             raise NotImplementedError("""rnn_type must be one of LeakyRNN,
                     LeakyGRU, EILeakyGRU, LSTM, GRU
@@ -569,18 +572,18 @@ class Model(object):
             cell, self.x, dtype=tf.float32, time_major=True)
 
         # Output
-        with tf.variable_scope("output"):
+        with tf.compat.v1.variable_scope("output"):
             # Using default initialization `glorot_uniform_initializer`
-            w_out = tf.get_variable(
+            w_out = tf.compat.v1.get_variable(
                 'weights',
                 [n_rnn, n_output],
                 dtype=tf.float32
             )
-            b_out = tf.get_variable(
+            b_out = tf.compat.v1.get_variable(
                 'biases',
                 [n_output],
                 dtype=tf.float32,
-                initializer=tf.constant_initializer(0.0, dtype=tf.float32)
+                initializer=tf.compat.v1.constant_initializer(0.0, dtype=tf.float32)
             )
 
         h_shaped = tf.reshape(self.h, (-1, n_rnn))
@@ -591,16 +594,16 @@ class Model(object):
             # Least-square loss
             y_hat = tf.sigmoid(y_hat_)
             self.cost_lsq = tf.reduce_mean(
-                tf.square((y_shaped - y_hat) * self.c_mask))
+                input_tensor=tf.square((y_shaped - y_hat) * self.c_mask))
         else:
             y_hat = tf.nn.softmax(y_hat_)
             # Cross-entropy loss
             self.cost_lsq = tf.reduce_mean(
-                self.c_mask * tf.nn.softmax_cross_entropy_with_logits(
-                    labels=y_shaped, logits=y_hat_))
+                input_tensor=self.c_mask * tf.nn.softmax_cross_entropy_with_logits(
+                    labels=tf.stop_gradient(y_shaped), logits=y_hat_))
 
         self.y_hat = tf.reshape(y_hat,
-                                (-1, tf.shape(self.h)[1], n_output))
+                                (-1, tf.shape(input=self.h)[1], n_output))
         y_hat_fix, y_hat_ring = tf.split(
             self.y_hat, [1, n_output - 1], axis=-1)
         self.y_hat_loc = tf_popvec(y_hat_ring)
@@ -647,24 +650,24 @@ class Model(object):
         n_rnn = hp['n_rnn']
         n_output = hp['n_output']
 
-        self.x = tf.placeholder("float", [None, None, n_input])
-        self.y = tf.placeholder("float", [None, None, n_output])
-        self.c_mask = tf.placeholder("float", [None, n_output])
+        self.x = tf.compat.v1.placeholder("float", [None, None, n_input])
+        self.y = tf.compat.v1.placeholder("float", [None, None, n_output])
+        self.c_mask = tf.compat.v1.placeholder("float", [None, n_output])
 
         sensory_inputs, rule_inputs = tf.split(
             self.x, [hp['rule_start'], hp['n_rule']], axis=-1)
 
-        sensory_rnn_inputs = tf.layers.dense(sensory_inputs, n_rnn, name='sen_input')
+        sensory_rnn_inputs = tf.compat.v1.layers.dense(sensory_inputs, n_rnn, name='sen_input')
 
         if 'mix_rule' in hp and hp['mix_rule'] is True:
             # rotate rule matrix
-            kernel_initializer = tf.orthogonal_initializer()
-            rule_inputs = tf.layers.dense(
+            kernel_initializer = tf.compat.v1.orthogonal_initializer()
+            rule_inputs = tf.compat.v1.layers.dense(
                 rule_inputs, hp['n_rule'], name='mix_rule',
                 use_bias=False, trainable=False,
                 kernel_initializer=kernel_initializer)
 
-        rule_rnn_inputs = tf.layers.dense(rule_inputs, n_rnn, name='rule_input', use_bias=False)
+        rule_rnn_inputs = tf.compat.v1.layers.dense(rule_inputs, n_rnn, name='rule_input', use_bias=False)
 
         rnn_inputs = sensory_rnn_inputs + rule_rnn_inputs
 
@@ -684,14 +687,14 @@ class Model(object):
         h_shaped = tf.reshape(self.h, (-1, n_rnn))
         y_shaped = tf.reshape(self.y, (-1, n_output))
         # y_hat shape (n_time*n_batch, n_unit)
-        y_hat = tf.layers.dense(
+        y_hat = tf.compat.v1.layers.dense(
             h_shaped, n_output, activation=tf.nn.sigmoid, name='output')
         # Least-square loss
         self.cost_lsq = tf.reduce_mean(
-            tf.square((y_shaped - y_hat) * self.c_mask))
+            input_tensor=tf.square((y_shaped - y_hat) * self.c_mask))
 
         self.y_hat = tf.reshape(y_hat,
-                                (-1, tf.shape(self.h)[1], n_output))
+                                (-1, tf.shape(input=self.h)[1], n_output))
         y_hat_fix, y_hat_ring = tf.split(
             self.y_hat, [1, n_output - 1], axis=-1)
         self.y_hat_loc = tf_popvec(y_hat_ring)
@@ -742,12 +745,12 @@ class Model(object):
 
     def initialize(self):
         """Initialize the model for training."""
-        sess = tf.get_default_session()
-        sess.run(tf.global_variables_initializer())
+        sess = tf.compat.v1.get_default_session()
+        sess.run(tf.compat.v1.global_variables_initializer())
 
     def restore(self, load_dir=None):
         """restore the model"""
-        sess = tf.get_default_session()
+        sess = tf.compat.v1.get_default_session()
         if load_dir is None:
             load_dir = self.model_dir
         save_path = os.path.join(load_dir, 'model.ckpt')
@@ -755,13 +758,13 @@ class Model(object):
             self.saver.restore(sess, save_path)
         except:
             # Some earlier checkpoints only stored trainable variables
-            self.saver = tf.train.Saver(self.var_list)
+            self.saver = tf.compat.v1.train.Saver(self.var_list)
             self.saver.restore(sess, save_path)
         print("Model restored from file: %s" % save_path)
 
     def save(self):
         """Save the model."""
-        sess = tf.get_default_session()
+        sess = tf.compat.v1.get_default_session()
         save_path = os.path.join(self.model_dir, 'model.ckpt')
         self.saver.save(sess, save_path)
         print("Model saved in file: %s" % save_path)

@@ -20,9 +20,8 @@ for r in allrules:
     rule = r
 
 
-    hp = odel.hp
+    hp = Model.hp
 
-    ssddd
 
     with tf.compat.v1.Session() as sess:
         model.restore()

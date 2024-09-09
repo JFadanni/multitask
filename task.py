@@ -7,14 +7,14 @@ import numpy as np
 
 # all rules
 rules_dict = \
-    {'all' : ['fdgo', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti',
+    {'all' : ['fdgo','caudorostral', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti',
               'dm1', 'dm2', 'contextdm1', 'contextdm2', 'multidm',
               'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm',
               'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo'],
 
     'mante' : ['contextdm1', 'contextdm2'],
-
     'fdgo' : ['fdgo'],
+    'caudorostral' : ['caudorostral'],
     'reactgo' : ['reactgo'],
     'delaygo' : ['delaygo'],
     'fdanti' : ['fdanti'],
@@ -669,6 +669,97 @@ def fdgo_(config, mode, anti_response, **kwargs):
 
 def fdgo(config, mode, **kwargs):
     return fdgo_(config, mode, False, **kwargs)
+
+def caudorostral_(config, mode, anti_response, **kwargs):
+    '''
+    Go with inhibitory control. Important difference with Go task is that
+    the stimulus is presented from the beginning.
+
+    Fixate whenever fixation point is shown,
+    A stimulus will be shown from the beginning
+    And output should saccade to the stimulus location
+    Generate one batch of trials
+
+    The fixation is shown between (0, fix_off)
+    The stimulus is shown between (0,T)
+
+    The output should be fixation location for (0, fix_off)
+    Otherwise should be the stimulus location
+
+    :param mode: the mode of generating. Options: 'random', 'explicit'...
+    Optional parameters:
+    :param batch_size: Batch size (required for mode=='random')
+    :param tdim: dimension of time (required for mode=='sample')
+    :param param: a dictionary of parameters (required for mode=='explicit')
+    :return: 2 Tensor3 data array (Time, Batchsize, Units)
+    '''
+    dt = config['dt']
+    rng = config['rng']
+    if mode == 'random': # Randomly generate parameters
+        batch_size = kwargs['batch_size']
+        # each batch consists of sequences of equal length
+        # A list of locations of fixation points and fixation off time
+
+        # A list of locations of stimulus (they are always on)
+        stim_locs = np.full(batch_size,0.5*np.pi)
+        stim_mod  = rng.choice([1,2])
+        stim_ons  = int(rng.uniform(300,700)/dt)
+
+        fix_offs  = stim_ons + int(rng.uniform(500,1500)/dt)
+        tdim      = int(500/dt) + fix_offs
+
+    elif mode == 'test':
+        tdim = int(2000/dt)
+        n_stim_loc, n_stim_mod = batch_shape = 20, 2
+        batch_size = np.prod(batch_shape)
+        ind_stim_loc, ind_stim_mod = np.unravel_index(range(batch_size),batch_shape)
+
+        stim_ons   = int(500/dt)
+        fix_offs   = int(1500/dt)
+        stim_locs  = 2*np.pi*ind_stim_loc/n_stim_loc
+        stim_mod   = ind_stim_mod + 1
+
+    elif mode == 'psychometric':
+        p = kwargs['params']
+        stim_locs = p['stim_locs']
+        stim_time = int(p['stim_time']/dt)
+        batch_size = len(stim_locs)
+
+        # Time of stimuluss on/off
+        stim_ons   = int(300/dt)
+        fix_offs  = stim_ons + stim_time
+        tdim      = int(400/dt) + fix_offs
+        stim_mod   = 1
+
+    else:
+        raise ValueError('Unknown mode: ' + str(mode))
+
+    # time to check the saccade location
+    check_ons  = fix_offs + int(100/dt)
+
+    # Response locations
+    stim_locs = np.array(stim_locs)
+    if not anti_response:
+        response_locs = stim_locs
+    else:
+        response_locs = (stim_locs+np.pi)%(2*np.pi)
+
+    trial = Trial(config, tdim, batch_size)
+    trial.add('fix_in', offs=fix_offs)
+    trial.add('stim', stim_locs, ons=stim_ons, mods=stim_mod)
+    trial.add('fix_out', offs=fix_offs)
+    trial.add('out', response_locs, ons=fix_offs)
+    trial.add_c_mask(pre_offs=fix_offs, post_ons=check_ons)
+
+    trial.epochs = {'fix1'     : (None, stim_ons),
+                   'stim1'     : (stim_ons, fix_offs),
+                   'go1'      : (fix_offs, None)}
+
+    return trial
+
+
+def caudorostral(config, mode, **kwargs):
+    return caudorostral_(config, mode, False, **kwargs)
 
 
 def fdanti(config, mode, **kwargs):
@@ -1533,6 +1624,7 @@ def delaymatchcategory_original(config, mode, **kwargs):
 
 rule_mapping = {'testinit': test_init,
                 'fdgo': fdgo,
+                'caudorostral': caudorostral,
                 'reactgo': reactgo,
                 'delaygo': delaygo,
                 'fdanti': fdanti,

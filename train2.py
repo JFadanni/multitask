@@ -149,6 +149,7 @@ def do_eval(sess, model, log, rule_train):
               '| cost {:0.6f}'.format(np.mean(clsq_tmp)) +
               '| c_reg {:0.6f}'.format(np.mean(creg_tmp)) +
               '  | perf {:0.2f}'.format(np.mean(perf_tmp)))
+              
         sys.stdout.flush()
 
     # TODO: This needs to be fixed since now rules are strings
@@ -161,6 +162,7 @@ def do_eval(sess, model, log, rule_train):
 
     perf_tests_min = np.min([log['perf_'+r][-1] for r in rule_tmp])
     log['perf_min'].append(perf_tests_min)
+    print(log['perf_min'][-1])
 
     # Saving the model
     model.save()
@@ -313,6 +315,7 @@ def train(model_dir,
                     log = do_eval(sess, model, log, hp['rule_trains'])
                     #if log['perf_avg'][-1] > model.hp['target_perf']:
                     #check if minimum performance is above target    
+                    print("target perf",model.hp['target_perf'])
                     if log['perf_min'][-1] > model.hp['target_perf']:
                         print('Perf reached the target: {:0.2f}'.format(
                             hp['target_perf']))

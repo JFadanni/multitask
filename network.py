@@ -118,8 +118,9 @@ class LeakyRNNCell(RNNCell):
                  w_rec_init='diag',
                  rng=None,
                  reuse=None,
-                 name=None):
-        super(LeakyRNNCell, self).__init__(_reuse=reuse, name=name)
+                 name=None,
+                 trainable=True):
+        super(LeakyRNNCell, self).__init__(_reuse=reuse, name=name, trainable=trainable)
 
         # Inputs must be 2-dimensional.
         # self.input_spec = base_layer.InputSpec(ndim=2)
@@ -484,7 +485,8 @@ class Model(object):
             self._build_seperate(hp)
         else:
             self._build_fused(hp)
-
+        
+       # self.allvars = tf.compat.v1.global_variables()
         self.var_list = tf.compat.v1.trainable_variables()
         self.weight_list = [v for v in self.var_list if is_weight(v)]
 
@@ -532,7 +534,7 @@ class Model(object):
             self.c_mask = tf.compat.v1.placeholder("float", [None, n_output])
         else:
             # Mask on time
-            self.c_mask = tf.compat.v1.placeholder("float", [None])
+            self.c_mask = tf.compat.v1.plaself.var_listceholder("float", [None])
 
         # Activation functions
         if hp['activation'] == 'power':
@@ -552,7 +554,8 @@ class Model(object):
                                 sigma_rec=hp['sigma_rec'],
                                 activation=hp['activation'],
                                 w_rec_init=hp['w_rec_init'],
-                                rng=self.rng)
+                                rng=self.rng,
+                                trainable = False)
         elif hp['rnn_type'] == 'LeakyGRU':
             cell = LeakyGRUCell(
                 n_rnn, hp['alpha'],

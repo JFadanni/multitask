@@ -4,6 +4,7 @@ from __future__ import division
 
 import sys
 import time
+import json
 from collections import defaultdict
 
 import numpy as np
@@ -219,6 +220,8 @@ def train(model_dir,
     default_hp = get_default_hp(ruleset)
     if hp is not None:
         default_hp.update(hp)
+    with open("default_hp.json", "w") as f:
+        json.dump(default_hp, f, indent=2)
     hp = default_hp
     hp['seed'] = seed
     hp['rng'] = np.random.RandomState(seed)
@@ -269,12 +272,14 @@ def train(model_dir,
         if trainables is None or trainables == 'all':
             var_list = model.var_list  # train everything
         elif trainables == 'input':
-            # train all nputs
+            # train all inputs
             var_list = [v for v in model.var_list
                         if ('input' in v.name) and ('rnn' not in v.name)]
         elif trainables == 'rule':
             # train rule inputs only
             var_list = [v for v in model.var_list if 'rule_input' in v.name]
+        elif trainables == "no_input":
+            var_list = [v for v in model.var_list if ('input' not in v.name) or ('rnn' in v.name)]
         else:
             raise ValueError('Unknown trainables')
         model.set_optimizer(var_list=var_list)

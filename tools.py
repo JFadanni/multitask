@@ -80,7 +80,7 @@ def save_log(log):
     model_dir = log['model_dir']
     fname = os.path.join(model_dir, 'log.json')
     with open(fname, 'w') as f:
-        json.dump(log, f)
+        json.dump(log, f, indent=2)
 
 
 def load_hp(model_dir):
@@ -105,7 +105,7 @@ def save_hp(hp, model_dir):
     hp_copy = hp.copy()
     hp_copy.pop('rng')  # rng can not be serialized
     with open(os.path.join(model_dir, 'hp.json'), 'w') as f:
-        json.dump(hp_copy, f)
+        json.dump(hp_copy, f, indent=2)
 
 
 def load_pickle(file):

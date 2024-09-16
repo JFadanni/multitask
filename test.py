@@ -15,8 +15,19 @@ for r in allrules:
 
     model_dir = '../new_train/'+r
 
+    try:
+        with open(model_dir+'/hp.json', 'r') as f:
+            hp = json.load(f)
+    except:
+        hp = {}
+
+    print(hp)
+
+
 #    with open(model_dir+'/log.json', 'r') as f:
-#        logdata = json.load(f)
+#        logdata
+#    if hasattr(hp['rule_trains'], '__iter__'):
+        # Set default as 1. = json.load(f)
 
 #    perf=logdata['perf_'+r]
 
@@ -29,7 +40,9 @@ for r in allrules:
       #    if(np.mean(perf[-10:])<0.99):
 
 #        print('not good enough')
-train.train(model_dir=model_dir, hp={'learning_rate': 0.001, 'activation': 'softplus',"target_perf" :0.99}, ruleset=ruleset, display_step=50,max_steps=2E6)
+    #train.train(model_dir=model_dir, hp={'learning_rate': 0.001, 'activation': 'softplus'}, ruleset=ruleset, display_step=50,max_steps=2E6)
+    train.train(model_dir=model_dir, hp=hp, ruleset=ruleset, display_step=50,max_steps=2E6,trainables="no_input")
+#train.train(model_dir=model_dir, hp={'learning_rate': 0.001, 'activation': 'softplus',"target_perf" :0.9999}, ruleset=ruleset, display_step=50,max_steps=2E6)
 #    else: 
 #        print(r,'good enough')
 

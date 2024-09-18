@@ -70,7 +70,7 @@ def get_perf(y_hatv, y_locv):
     Returns:
       perf: Numpy array (Batch,)
     """
-    if len(y_hat.shape) != 3:
+    if len(y_hatv.shape) != 3:
         raise ValueError('y_hat must have shape (Time, Batch, Unit)')
     # Only look at last time points
     y_loc = y_locv[-1]
@@ -92,8 +92,8 @@ def get_perf(y_hatv, y_locv):
 
     perf0 = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
 #################################################
-    y_loc = y_loc[60]
-    y_hat = y_hat[60]
+    y_loc = y_locv[60]
+    y_hat = y_hatv[60]
 
     # Fixation and location of y_hat
     y_hat_fix = y_hat[..., 0]

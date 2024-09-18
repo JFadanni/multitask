@@ -59,22 +59,80 @@ def tf_popvec(y):
     return tf.math.floormod(loc, 2*np.pi)
 
 
-def get_perf(y_hat, y_loc):
+def get_perf(y_hatv, y_locv):
     """Get performance.
 
     Args:
-      y_hat: Actual output. Numpy array (Time, Batch, Unit)
-      y_loc: Target output location (-1 for fixation).
+      y_hatv: Actual output. Numpy array (Time, Batch, Unit)
+      y_locv: Target output location (-1 for fixation).
         Numpy array (Time, Batch)
 
     Returns:
       perf: Numpy array (Batch,)
     """
-    if len(y_hat.shape) != 3:
+    if len(y_hatv.shape) != 3:
+        raise ValueError('y_hat must have shape (Time, Batch, Unit)')
+    y_loc = y_locv[-1]
+    y_hat = y_hatv[-1]
+
+    # Fixation and location of y_hat
+    y_hat_fix = y_hat[..., 0]
+    y_hat_loc = popvec(y_hat[..., 1:])
+
+    # Fixating? Correctly saccading?
+    fixating = y_hat_fix > 0.8
+
+    original_dist = y_loc - y_hat_loc
+    dist = np.minimum(abs(original_dist), 2*np.pi-abs(original_dist))
+    corr_loc = dist < 0.2*np.pi
+
+    # Should fixate?
+    should_fix = y_loc < 0
+
+    perfs = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+
+#    perfs = 0.0
+    j = 1
+    for i in range(1,y_hatv.shape[0],10):
+        y_loc = y_locv[i]
+        y_hat = y_hatv[i]
+
+    # Fixation and location of y_hat
+        y_hat_fix = y_hat[..., 0]
+        y_hat_loc = popvec(y_hat[..., 1:])
+
+    # Fixating? Correctly saccading?
+        fixating = y_hat_fix > 0.8
+
+        original_dist = y_loc - y_hat_loc
+        dist = np.minimum(abs(original_dist), 2*np.pi-abs(original_dist))
+        corr_loc = dist < 0.2*np.pi
+
+    # Should fixate?
+        should_fix = y_loc < 0
+
+        perf_i = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+        perfs += perf_i
+        j +=1
+    perf = perfs / j
+    return perf
+
+def get_perf1(y_hatv, y_locv):
+    """Get performance.
+
+    Args:
+      y_hatv: Actual output. Numpy array (Time, Batch, Unit)
+      y_locv: Target output location (-1 for fixation).
+        Numpy array (Time, Batch)
+
+    Returns:
+      perf: Numpy array (Batch,)
+    """
+    if len(y_hatv.shape) != 3:
         raise ValueError('y_hat must have shape (Time, Batch, Unit)')
     # Only look at last time points
-    y_loc = y_loc[-1]
-    y_hat = y_hat[-1]
+    y_loc = y_locv[-1]
+    y_hat = y_hatv[-1]
 
     # Fixation and location of y_hat
     y_hat_fix = y_hat[..., 0]
@@ -90,9 +148,51 @@ def get_perf(y_hat, y_loc):
     # Should fixate?
     should_fix = y_loc < 0
 
+    perf1 = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+    #####################
+    y_loc = y_locv[30]
+    y_hat = y_hatv[30]
+
+    # Fixation and location of y_hat
+    y_hat_fix = y_hat[..., 0]
+    y_hat_loc = popvec(y_hat[..., 1:])
+
+    # Fixating? Correctly saccading?
+    fixating = y_hat_fix > 0.5
+
+    original_dist = y_loc - y_hat_loc
+    dist = np.minimum(abs(original_dist), 2*np.pi-abs(original_dist))
+    corr_loc = dist < 0.2*np.pi
+
+    # Should fixate?
+    should_fix = y_loc < 0
+
+    perf2 = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+    #####################
+    y_loc = y_locv[60]
+    y_hat = y_hatv[60]
+
+    # Fixation and location of y_hat
+    y_hat_fix = y_hat[..., 0]
+    y_hat_loc = popvec(y_hat[..., 1:])
+
+    # Fixating? Correctly saccading?
+    fixating = y_hat_fix > 0.5
+
+    original_dist = y_loc - y_hat_loc
+    dist = np.minimum(abs(original_dist), 2*np.pi-abs(original_dist))
+    corr_loc = dist < 0.2*np.pi
+
+    # Should fixate?
+    should_fix = y_loc < 0
+
+    perf3 = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+    #####################
+
     # performance
-    perf = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+    perf = (perf1 + perf2 + perf3)/3
     return perf
+
 
 
 class LeakyRNNCell(RNNCell):

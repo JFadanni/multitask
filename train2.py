@@ -13,7 +13,7 @@ import tensorflow as tf
 
 import task
 from task import generate_trials
-from network import Model, get_perf
+from network import Model, get_perf, get_perf1
 from analysis import variance
 import tools
 
@@ -138,7 +138,8 @@ def do_eval(sess, model, log, rule_train):
             # Cost is first summed over time,
             # and averaged across batch and units
             # We did the averaging over time through c_mask
-            perf_test = np.mean(get_perf(y_hat_test, trial.y_loc))
+            #perf_test = np.mean(get_perf(y_hat_test, trial.y_loc))
+            perf_test = np.mean(get_perf1(y_hat_test, trial.y_loc))
             clsq_tmp.append(c_lsq)
             creg_tmp.append(c_reg)
             perf_tmp.append(perf_test)
@@ -268,6 +269,9 @@ def train(model_dir,
             # Assume everything is restored
             sess.run(tf.compat.v1.global_variables_initializer())
 
+        print(50*"=","\ntrainable vars:", model.var_list)
+        print([v.name for v in model.var_list],"\n")
+        print(50*"=")
         # Set trainable parameters
         if trainables is None or trainables == 'all':
             var_list = model.var_list  # train everything

@@ -8,32 +8,46 @@ import tools
 
 
 
-allrules = ['fdgo', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti', 'dm1', 'dm2', 'contextdm1', 'contextdm2', 'multidm', 'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm', 'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo']
+#allrules = ['fdgo', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti', 'dm1', 'dm2', 'contextdm1', 'contextdm2', 'multidm', 'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm', 'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo']
 
 #allrules = ['fdgo', 'reactgo', 'fdanti', 'reactanti', 'delayanti']
 #, 'dm1', 'dm2', 'contextdm1', 'contextdm2', 'multidm', 'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm', 'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo']
 
+allrules = ["caudorostral"]
+
+#allrules = ["fdgo"]
 
 for r in allrules:
 
-    model_dir = 'new_train/'+r
+    model_dir = '../new_train/'+r
     rule = r
 
 
-    hp = Model.hp
+    model = Model(model_dir)
+
+    hp = model.hp
 
 
     with tf.compat.v1.Session() as sess:
         model.restore()
 
         #trial = generate_trials(rule, hp, mode='test',batch_size = 1)
-        trial = generate_trials(rule, hp, mode='random',batch_size = 200)
+        trial = generate_trials(rule, hp, mode='random',batch_size = 10)
         feed_dict = tools.gen_feed_dict(model, trial, hp)
         h, y_hat = sess.run([model.h, model.y_hat], feed_dict=feed_dict)
         # All matrices have shape (n_time, n_condition, n_neuron)
         
         print(np.shape(trial.x))
 
+
+        fig, ax = plt.subplots(1, 1)
+        plt.plot(trial.x[:, 5, 0])
+        plt.plot(trial.x[:, 5, 41])
+        plt.plot(trial.y[:, 5, 0])
+        plt.plot(trial.y[:, 5, 8])
+        plt.plot(y_hat[:, 5, 0])
+        plt.plot(y_hat[:, 5, 8])
+        plt.show()
 
         var_list = model.var_list
         # evaluate the parameters after training
@@ -45,7 +59,6 @@ for r in allrules:
     # Take only the one example trial
     i_trial = 0
 
-    '''
     for activity, title in zip([trial.x, h, y_hat],
                             ['input', 'recurrent', 'output']):
         
@@ -55,7 +68,7 @@ for r in allrules:
         plt.title(title)
         plt.colorbar()
         plt.show()
-    '''
+    
 
     print( trial.x.shape, trial.y.shape )
 
@@ -65,8 +78,8 @@ for r in allrules:
 
     print( np.shape(x_train), np.shape(y_train ))
     
-    np.savetxt(model_dir+'/x_train.txt', x_train)
-    np.savetxt(model_dir+'/y_train.txt', y_train)
+    #np.savetxt(model_dir+'/x_train.dat', x_train)
+    #np.savetxt(model_dir+'/y_train.dat', y_train)
     
     
     '''
@@ -95,11 +108,11 @@ for r in allrules:
     brec = params[1]
     bout = params[3]
     
-    np.savetxt(model_dir+'/RNN_all_win.txt', w_in)
-    np.savetxt(model_dir+'/RNN_all_wrec.txt', w_rec)
-    np.savetxt(model_dir+'/RNN_all_wout.txt', w_out)
+    #np.savetxt(model_dir+'/RNN_all_win.dat', w_in)
+    #np.savetxt(model_dir+'/RNN_all_wrec.dat', w_rec)
+    #np.savetxt(model_dir+'/RNN_all_wout.dat', w_out)
 
-    np.savetxt(model_dir+'/RNN_all_brec.txt', brec)
-    np.savetxt(model_dir+'/RNN_all_bout.txt', bout)
+    #np.savetxt(model_dir+'/RNN_all_brec.dat', brec)
+    #np.savetxt(model_dir+'/RNN_all_bout.dat', bout)
     
     

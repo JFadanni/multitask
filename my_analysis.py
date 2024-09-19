@@ -78,8 +78,8 @@ for r in allrules:
 
     print( np.shape(x_train), np.shape(y_train ))
     
-    #np.savetxt(model_dir+'/x_train.dat', x_train)
-    #np.savetxt(model_dir+'/y_train.dat', y_train)
+    np.savetxt(model_dir+'/x_train.dat', x_train)
+    np.savetxt(model_dir+'/y_train.dat', y_train)
     
     
     '''
@@ -108,11 +108,11 @@ for r in allrules:
     brec = params[1]
     bout = params[3]
     
-    #np.savetxt(model_dir+'/RNN_all_win.dat', w_in)
-    #np.savetxt(model_dir+'/RNN_all_wrec.dat', w_rec)
-    #np.savetxt(model_dir+'/RNN_all_wout.dat', w_out)
+    np.savetxt(model_dir+'/RNN_all_win.dat', w_in)
+    np.savetxt(model_dir+'/RNN_all_wrec.dat', w_rec)
+    np.savetxt(model_dir+'/RNN_all_wout.dat', w_out)
 
-    #np.savetxt(model_dir+'/RNN_all_brec.dat', brec)
-    #np.savetxt(model_dir+'/RNN_all_bout.dat', bout)
+    np.savetxt(model_dir+'/RNN_all_brec.dat', brec)
+    np.savetxt(model_dir+'/RNN_all_bout.dat', bout)
     
     

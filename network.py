@@ -438,7 +438,8 @@ class Model(object):
                  model_dir,
                  hp=None,
                  sigma_rec=None,
-                 dt=None):
+                 dt=None,
+                 trainables="all"):
         """
         Initializing the model with information from hp
 
@@ -475,6 +476,7 @@ class Model(object):
         if hp['in_type'] != 'normal':
             raise ValueError('Only support in_type ' + hp['in_type'])
 
+        self.trainables = trainables
         self._build(hp)
 
         self.model_dir = model_dir
@@ -548,6 +550,8 @@ class Model(object):
 
         # Recurrent activity
         if hp['rnn_type'] == 'LeakyRNN':
+            if self.trainables == 'all' or self.trainables == 'input':
+                trainable = True
             n_in_rnn = self.x.get_shape().as_list()[-1]
             cell = LeakyRNNCell(n_rnn, n_in_rnn,
                                 hp['alpha'],
@@ -555,7 +559,7 @@ class Model(object):
                                 activation=hp['activation'],
                                 w_rec_init=hp['w_rec_init'],
                                 rng=self.rng,
-                                trainable = False)
+                                trainable = trainable)
         elif hp['rnn_type'] == 'LeakyGRU':
             cell = LeakyGRUCell(
                 n_rnn, hp['alpha'],

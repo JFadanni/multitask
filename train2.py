@@ -248,7 +248,7 @@ def train(model_dir,
     tools.save_hp(hp, model_dir)
 
     # Build the model
-    model = Model(model_dir, hp=hp)
+    model = Model(model_dir, hp=hp,trainables=trainables)
 
     # Display hp
     for key, val in hp.items():

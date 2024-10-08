@@ -16,11 +16,11 @@ allrules = ['fdgo', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti', 'd
 
 for r in allrules:
 
-    model_dir = 'new_train/'+r
+    model_dir = '../new_train/'+r
     rule = r
 
-
-    hp = Model.hp
+    model = Model(model_dir)
+    hp = model.hp
 
 
     with tf.compat.v1.Session() as sess:
@@ -65,8 +65,8 @@ for r in allrules:
 
     print( np.shape(x_train), np.shape(y_train ))
     
-    np.savetxt(model_dir+'/x_train.txt', x_train)
-    np.savetxt(model_dir+'/y_train.txt', y_train)
+    np.savetxt(model_dir+'/x_train.dat', x_train)
+    np.savetxt(model_dir+'/y_train.dat', y_train)
     
     
     '''
@@ -78,7 +78,7 @@ for r in allrules:
         plt.figure()
         # notice the transpose
         plt.imshow(param.T, aspect='auto', cmap='bwr', vmin=-vmax, vmax=vmax,
-                   interpolation='none', origin='lower')
+               y_train.txt    interpolation='none', origin='lower')
         plt.title(name)
         plt.colorbar()
         plt.xlabel('From')
@@ -95,11 +95,11 @@ for r in allrules:
     brec = params[1]
     bout = params[3]
     
-    np.savetxt(model_dir+'/RNN_all_win.txt', w_in)
-    np.savetxt(model_dir+'/RNN_all_wrec.txt', w_rec)
-    np.savetxt(model_dir+'/RNN_all_wout.txt', w_out)
+    np.savetxt(model_dir+'/RNN_all_win.dat', w_in)
+    np.savetxt(model_dir+'/RNN_all_wrec.dat', w_rec)
+    np.savetxt(model_dir+'/RNN_all_wout.dat', w_out)
 
-    np.savetxt(model_dir+'/RNN_all_brec.txt', brec)
-    np.savetxt(model_dir+'/RNN_all_bout.txt', bout)
+    np.savetxt(model_dir+'/RNN_all_brec.dat', brec)
+    np.savetxt(model_dir+'/RNN_all_bout.dat', bout)
     
     

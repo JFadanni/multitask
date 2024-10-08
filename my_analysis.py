@@ -41,20 +41,24 @@ for r in allrules:
 
 
         fig, ax = plt.subplots(1, 1)
-        plt.plot(trial.x[:, 5, 0])
-        plt.plot(trial.x[:, 5, 41])
-        plt.plot(trial.y[:, 5, 0])
-        plt.plot(trial.y[:, 5, 8])
-        plt.plot(y_hat[:, 5, 0])
-        plt.plot(y_hat[:, 5, 8])
+        plt.plot(trial.x[:, 5, 0], label="x0")
+        plt.plot(trial.x[:, 5, 41],label = "x41")
+        plt.plot(trial.y[:, 5, 0],label="y0")
+        plt.plot(trial.y[:, 5, 8],label="y8")
+        plt.plot(y_hat[:, 5, 0],label="y_hat0")
+        plt.plot(y_hat[:, 5, 8],label="y_hat8")
+        plt.legend()
         plt.show()
 
         var_list = model.var_list
+        print(var_list)
         # evaluate the parameters after training
         params = [sess.run(var) for var in var_list]
         # get name of each variable
         names  = [var.name for var in var_list]
-
+        for i, n in enumerate(names):
+            print(i, n)
+        
 
     # Take only the one example trial
     i_trial = 0
@@ -75,12 +79,14 @@ for r in allrules:
     x_train = np.vstack(np.swapaxes(trial.x, 0, 1))
     y_train = np.vstack(np.swapaxes(trial.y, 0, 1))
 
-
+    y_hat_train = np.vstack(np.swapaxes(y_hat, 0, 1))
     print( np.shape(x_train), np.shape(y_train ))
     
     np.savetxt(model_dir+'/x_train.dat', x_train)
     np.savetxt(model_dir+'/y_train.dat', y_train)
-    
+    np.savetxt(model_dir+'/y_hat.dat', y_hat_train)
+
+    exit()
     
     '''
     for param, name in zip(params, names):
@@ -98,15 +104,15 @@ for r in allrules:
         plt.ylabel('To')
         plt.show()
     '''
+#    Nin=66
 
-    Nin=66
-
-    w_rnn = params[0]
-    w_in = w_rnn[:Nin]
-    w_rec = w_rnn[Nin:]
-    w_out = params[2]
-    brec = params[1]
-    bout = params[3]
+#    w_rnn = params[0]
+    #w_in = w_rnn[:Nin]
+    w_in = params[0]
+    w_rec = params[3]
+    w_out = params[5]
+    brec = params[4]
+    bout = params[6]
     
     np.savetxt(model_dir+'/RNN_all_win.dat', w_in)
     np.savetxt(model_dir+'/RNN_all_wrec.dat', w_rec)

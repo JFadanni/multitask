@@ -16,7 +16,7 @@ allrules = ['fdgo', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti', 'd
 
 for r in allrules:
 
-    model_dir = '../new_train/'+r
+    model_dir = '../new_train1/'+r
     rule = r
 
     model = Model(model_dir)
@@ -27,7 +27,7 @@ for r in allrules:
         model.restore()
 
         #trial = generate_trials(rule, hp, mode='test',batch_size = 1)
-        trial = generate_trials(rule, hp, mode='random',batch_size = 200)
+        trial = generate_trials(rule, hp, mode='random',batch_size = 200, initial_time=30)
         feed_dict = tools.gen_feed_dict(model, trial, hp)
         h, y_hat = sess.run([model.h, model.y_hat], feed_dict=feed_dict)
         # All matrices have shape (n_time, n_condition, n_neuron)

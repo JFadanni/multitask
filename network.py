@@ -59,7 +59,7 @@ def tf_popvec(y):
     return tf.math.floormod(loc, 2*np.pi)
 
 
-def get_perf(y_hat, y_loc):
+def get_perf(y_hat_in, y_loc_in):
     """Get performance.
 
     Args:
@@ -70,29 +70,74 @@ def get_perf(y_hat, y_loc):
     Returns:
       perf: Numpy array (Batch,)
     """
-    if len(y_hat.shape) != 3:
+    if len(y_hat_in.shape) != 3:
         raise ValueError('y_hat must have shape (Time, Batch, Unit)')
+    
+    total_time = y_hat_in.shape[0]
+    rng = np.random.default_rng()
+    tt = rng.integers(total_time//5, total_time//2,2)
     # Only look at last time points
-    y_loc = y_loc[-1]
-    y_hat = y_hat[-1]
+    y_loc = y_loc_in[-1]
+    y_hat = y_hat_in[-1]
 
     # Fixation and location of y_hat
     y_hat_fix = y_hat[..., 0]
     y_hat_loc = popvec(y_hat[..., 1:])
 
     # Fixating? Correctly saccading?
-    fixating = y_hat_fix > 0.5
+    fixating = y_hat_fix > 0.75
+    nonfixating = y_hat_fix < 0.1
+
 
     original_dist = y_loc - y_hat_loc
     dist = np.minimum(abs(original_dist), 2*np.pi-abs(original_dist))
-    corr_loc = dist < 0.2*np.pi
+    corr_loc = dist < 0.1*np.pi
 
     # Should fixate?
     should_fix = y_loc < 0
 
     # performance
-    perf = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
-    return perf
+    #perf0 = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+    #perf0 = should_fix * fixating + (1-should_fix) * corr_loc * nonfixating
+    #perf0 = should_fix * fixating + (1-fixating) * corr_loc * (~should_fix)
+    perf0 = should_fix * fixating + nonfixating * (~should_fix) * corr_loc
+
+
+    # Look at the point at 1/3 of the way through the trial
+    #t = total_time // 3
+    perf_array = np.empty((2,perf0.shape[0]), dtype=bool)
+    for i in range(2):
+        t = tt[i]
+        y_loc1 = y_loc_in[-t]
+        y_hat1 = y_hat_in[-t]
+
+    # Fixation and location of y_hat
+        y_hat_fix1 = y_hat1[..., 0]
+        y_hat_loc1 = popvec(y_hat1[..., 1:])
+
+    # Fixating? Correctly saccading?
+        fixating1 = y_hat_fix1 > 0.75
+        nonfixating1 = y_hat_fix1 < 0.1
+
+
+        original_dist1 = y_loc1 - y_hat_loc1
+        dist1 = np.minimum(abs(original_dist1), 2*np.pi-abs(original_dist1))
+        corr_loc1 = dist1 < 0.1*np.pi
+
+    # Should fixate?
+        should_fix1 = y_loc1 < 0
+
+    # performance
+    #perf1 = should_fix * fixating + (1-should_fix) * corr_loc * (1-fixating)
+    #perf1 = should_fix1 * fixating1 + (1-should_fix1) * corr_loc1 * nonfixating1
+    #perf1 = should_fix1 * fixating1 + (1-fixating1) * corr_loc1 * (~should_fix1)
+        perfi = should_fix1 * fixating1 + nonfixating1 * (~should_fix1) * corr_loc1
+
+        perf_array[i] = perfi
+    perf1 = np.logical_and(perf_array[0], perf_array[1])
+    #perf = (perf0 + perf1)/2
+    perf = np.logical_and(perf0, perf1)
+    return np.float16(perf)
 
 
 class LeakyRNNCell(RNNCell):
@@ -574,6 +619,9 @@ class Model(object):
                     LeakyGRU, EILeakyGRU, LSTM, GRU
                     """)
 
+        # defining initial state
+        n_batch = tf.shape(input=self.y)[1]
+        initial_state = cell.zero_state(n_batch, dtype=tf.float32)
         # Dynamic rnn with time major
         self.h, states = rnn.dynamic_rnn(
             cell, self.x, dtype=tf.float32, time_major=True)
@@ -685,6 +733,10 @@ class Model(object):
             activation=hp['activation'],
             w_rec_init=hp['w_rec_init'],
             rng=self.rng)
+
+        # defining initial state
+        n_batch = tf.shape(input=self.y)[1]
+        initial_state = cell.zero_state(n_batch, dtype=tf.float32)
 
         # Dynamic rnn with time major
         self.h, states = rnn.dynamic_rnn(

@@ -336,7 +336,7 @@ def train(model_dir,
                 # Each batch has the same trial length
                 trial = generate_trials(
                         rule_train_now, hp, 'random',
-                        batch_size=hp['batch_size_train'])
+                        batch_size=hp['batch_size_train'], initial_time = 30)
 
                 # Generating feed_dict.
                 feed_dict = tools.gen_feed_dict(model, trial, hp)

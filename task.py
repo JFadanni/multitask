@@ -254,13 +254,14 @@ def delaygo_(config, mode, anti_response, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
 
-        # A list of locations of stimuluss and on/off time
+        # A list of locations of stimulus and on/off time
         stim_locs = rng.rand(batch_size)*2*np.pi
         # stim_ons  = int(500/dt)
-        stim_ons  = int(rng.choice([300, 500, 700])/dt)
+        stim_ons  = int(rng.choice([300, 500, 700])/dt) + initial_time
         # stim_offs = stim_ons + int(200/dt)
         stim_offs = stim_ons + int(rng.choice([200, 400, 600])/dt)
         fix_offs = stim_offs + int(rng.choice([200, 400, 800, 1600])/dt)
@@ -361,6 +362,7 @@ def _contextdm(config, mode, attend_mod, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
 
@@ -397,7 +399,7 @@ def _contextdm(config, mode, attend_mod, **kwargs):
             stim2_mod2_strengths = stim2_strengths - stim2_mod12_diff/2
 
         # Time of stimuluss on/off
-        stim_on = int(rng.uniform(100,400)/dt)
+        stim_on = int(rng.uniform(100,400)/dt) + initial_time
         stim_ons = (np.ones(batch_size)*stim_on).astype(int)
         stim_dur = int(rng.choice([400, 800, 1600])/dt)
         # stim_dur = rng.choice((np.array([200, 400, 800, 1600])/dt).astype(int)) # Current setting
@@ -513,11 +515,12 @@ def reactgo_(config, mode, anti_response, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
         # each batch consists of sequences of equal length
         # A list of locations of fixation points and fixation off time
-        stim_ons = int(rng.uniform(500,2500)/dt)
+        stim_ons = int(rng.uniform(500,2500)/dt) + initial_time
         tdim = int(500/dt) + stim_ons
 
         # A list of locations of stimuluss (they are always on)
@@ -604,6 +607,7 @@ def fdgo_(config, mode, anti_response, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
         # each batch consists of sequences of equal length
@@ -612,7 +616,7 @@ def fdgo_(config, mode, anti_response, **kwargs):
         # A list of locations of stimulus (they are always on)
         stim_locs = rng.rand(batch_size)*2*np.pi
         stim_mod  = rng.choice([1,2])
-        stim_ons  = int(rng.uniform(300,700)/dt)
+        stim_ons  = int(rng.uniform(300,700)/dt) + initial_time
 
         fix_offs  = stim_ons + int(rng.uniform(500,1500)/dt)
         tdim      = int(500/dt) + fix_offs
@@ -791,6 +795,7 @@ def _dm(config, mode, stim_mod, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
 
@@ -817,7 +822,7 @@ def _dm(config, mode, stim_mod, **kwargs):
         stim2_strengths = stims_mean - stims_coh*stims_sign
 
         # Time of stimuluss on/off
-        stim_on = int(rng.uniform(100,400)/dt)
+        stim_on = int(rng.uniform(100,400)/dt) + initial_time
         stim_ons = (np.ones(batch_size)*stim_on).astype(int)
         # stim_dur = int(rng.uniform(300,1500)/dt)
         stim_dur = int(rng.choice([400, 800, 1600])/dt)
@@ -906,6 +911,7 @@ def _delaydm(config, mode, stim_mod, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
 
@@ -932,7 +938,7 @@ def _delaydm(config, mode, stim_mod, **kwargs):
         # stim2_strengths = rng.uniform(0.25,1.75,(batch_size,))
 
         # Time of stimuluss on/off
-        stim1_ons  = int(rng.choice([200, 400, 600])/dt)
+        stim1_ons  = int(rng.choice([200, 400, 600])/dt) + initial_time
         stim1_offs = stim1_ons + int(rng.choice([200, 400, 600])/dt)
         stim2_ons  = stim1_offs + int(rng.choice([200, 400, 800, 1600])/dt)
         stim2_offs = stim2_ons + int(rng.choice([200, 400, 600])/dt)
@@ -1038,6 +1044,7 @@ def _contextdelaydm(config, mode, attend_mod, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
 
@@ -1077,7 +1084,7 @@ def _contextdelaydm(config, mode, attend_mod, **kwargs):
             stim2_mod2_strengths = stim2_strengths - stim2_mod12_diff/2
 
         # Time of stimuluss on/off
-        stim1_ons  = int(rng.choice([200, 400, 600])/dt)
+        stim1_ons  = int(rng.choice([200, 400, 600])/dt) + initial_time
         stim1_offs = stim1_ons + int(rng.choice([200, 400, 600])/dt)
         stim2_ons  = stim1_offs + int(rng.choice([200, 400, 800, 1600])/dt)
         stim2_offs = stim2_ons + int(rng.choice([200, 400, 600])/dt)
@@ -1207,6 +1214,7 @@ def dms_(config, mode, matchnogo, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
 
@@ -1221,7 +1229,7 @@ def dms_(config, mode, matchnogo, **kwargs):
         stim2_locs = (stim1_locs+stim_dist*(1-matchs))%(2*np.pi)
 
         # Time of stimuluss on/off
-        stim1_ons  = int(rng.choice([200, 400, 600])/dt)
+        stim1_ons  = int(rng.choice([200, 400, 600])/dt) + initial_time
         stim1_offs = stim1_ons + int(rng.choice([200, 400, 600])/dt)
         stim2_ons  = stim1_offs + int(rng.choice([200, 400, 800, 1600])/dt)
         tdim       = stim2_ons + int(500/dt)
@@ -1330,6 +1338,7 @@ def dmc_(config, mode, matchnogo, **kwargs):
     '''
     dt = config['dt']
     rng = config['rng']
+    initial_time = kwargs.get('initial_time', 0)
     if mode == 'random': # Randomly generate parameters
         batch_size = kwargs['batch_size']
         # each batch consists of sequences of equal length
@@ -1345,7 +1354,7 @@ def dmc_(config, mode, matchnogo, **kwargs):
         stim2_locs = rng.choice(np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9])*np.pi,size=(batch_size,))
 
         # Time of stimuluss on/off
-        stim1_ons  = int(rng.choice([200, 400, 600])/dt)
+        stim1_ons  = int(rng.choice([200, 400, 600])/dt) + initial_time
         stim1_offs = stim1_ons + int(rng.choice([200, 400, 600])/dt)
         stim2_ons  = stim1_offs + int(rng.choice([200, 400, 800, 1600])/dt)
         tdim       = stim2_ons + int(rng.choice([200, 400, 600])/dt)

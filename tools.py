@@ -203,7 +203,7 @@ def mkdir_p(path):
 def gen_ortho_matrix(dim, rng=None):
     """Generate random orthogonal matrix
     Taken from scipy.stats.ortho_group
-    Copied here from compatibilty with older versions of scipy
+    Copied here from compatibility with older versions of scipy
     """
     H = np.eye(dim)
     for n in range(1, dim):

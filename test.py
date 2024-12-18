@@ -2,10 +2,12 @@ import train2 as train
 import json
 import numpy as np
 
-#allrules = ['fdgo', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti', 'dm1', 'dm2', 'contextdm1', 'contextdm2', 'multidm', 'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm', 'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo']
+allrules = ['fdgo', 'reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti', 'dm1', 'dm2', 'contextdm1', 'contextdm2', 'multidm', 'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm', 'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo']
+#allrules = ['reactgo', 'delaygo', 'fdanti', 'reactanti', 'delayanti', 'dm1', 'dm2', 'contextdm1', 'contextdm2', 'multidm', 'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm', 'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo']
 
 #allrules= ["fdgo"]
-allrules= ["caudorostral"]
+#allrules= ["reactgo"]
+#allrules= ["caudorostral"]
 
 #allrules = ['delaygo', 'dm1', 'dm2']
 #allrules = ['contextdm1', 'contextdm2', 'multidm', 'delaydm1', 'delaydm2', 'contextdelaydm1', 'contextdelaydm2', 'multidelaydm', 'dmsgo', 'dmsnogo', 'dmcgo', 'dmcnogo']
@@ -13,7 +15,7 @@ allrules= ["caudorostral"]
 for r in allrules:
     ruleset=r
 
-    model_dir = '../new_train/'+r
+    model_dir = '../new_train1/'+r
 
     try:
         with open(model_dir+'/hp.json', 'r') as f:
@@ -41,8 +43,9 @@ for r in allrules:
 
 #        print('not good enough')
     #train.train(model_dir=model_dir, hp={'learning_rate': 0.001, 'activation': 'softplus'}, ruleset=ruleset, display_step=50,max_steps=2E6)
-    train.train(model_dir=model_dir, hp=hp, ruleset=ruleset, display_step=50,max_steps=2E6,trainables="no_input")
-#train.train(model_dir=model_dir, hp={'learning_rate': 0.001, 'activation': 'softplus',"target_perf" :0.9999}, ruleset=ruleset, display_step=50,max_steps=2E6)
+    #train.train(model_dir=model_dir, hp=hp, ruleset=ruleset, display_step=50,max_steps=2E6,trainables="no_input")
+    #train.train(model_dir=model_dir, hp=hp, ruleset=ruleset, display_step=50,max_steps=2E6,trainables="all")
+    train.train(model_dir=model_dir, hp={'learning_rate': 0.001, 'activation': 'softplus',"target_perf" :0.999}, ruleset=ruleset, display_step=50,max_steps=2E6,trainables="all")
 #    else: 
 #        print(r,'good enough')
 
